@@ -2,14 +2,14 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
 #include <iostream>
+#include <cstdlib>
 
 using namespace sf;
 
-class Ball {
-
+class Roid {
     public:
 
-		Ball(const RenderWindow& W, int rad, int x, int y, int r, int g, int b);
+		Roid(const RenderWindow& W, int rad, int x, int y, int r, int g, int b);
 		void move(float x, float y);
 		void update();
 		Sprite sprite; //must be public so we can draw it	
@@ -20,22 +20,39 @@ class Ball {
 		float rad;
 		float winwidth; //assigned in ctor method below
 		float winheight ;
-		//float winwidth( window.getSize().x); //fails as no window object in Ball class
-		//float winheight( window.getSize().y);
 		Texture texture; //static so we don't have a texture for each instance
-		//bool collided;
-		
-		
+};
+
+class Ship {
+    public:
+
+		Ship(const RenderWindow& W, int rad, int x, int y, int r, int g, int b);
+		void move(float x, float y);
+		void update();
+		Sprite sprite; //must be public so we can draw it	
+	
+	private:
+		RenderWindow* W;
+		Vector2f pos;		   
+		float rad;
+		float winwidth; //assigned in ctor method below
+		float winheight ;
+		Texture texture; //static so we don't have a texture for each instance
 };
 
 
 int main()
 {
-    //Ball ball(50, 100, 30, 250, 0, 0);
-
 	Event event;
     RenderWindow window(VideoMode(800,600), "SFML Test");
-    Ball ball(window, 50, 100, 30, 250, 0, 0);
+    Roid roid(window, 50, 100, 30, 250, 0, 0);
+    Ship ship(window, 50,100,30,250,0,0);
+    
+    srand(static_cast<unsigned>(time(0)));
+    int x, y;
+    x = rand()%10+5;
+    y = rand()%10+5;
+
     while(window.isOpen())
     {
         while(window.pollEvent(event))
@@ -52,24 +69,27 @@ int main()
 
         }
 
-        ball.update();
+        roid.move(x,y);
+        
+        roid.update();
+        ship.update();
+        
 		window.setFramerateLimit(60);
         window.clear(Color::White);
-        window.draw(ball.sprite);
+        
+        window.draw(roid.sprite);
+        window.draw(ship.sprite);
+        
         window.display();
     }
     return 0;
-
 }
 
 
-Ball::Ball(const RenderWindow& W, int rad, int x, int y, int r, int g, int b)
+Roid::Roid(const RenderWindow& W, int rad, int x, int y, int r, int g, int b)
 {
-	//W.setTitle("aoiresntoiaen"); //fails cause W is passed as const ref
-	//W.setSize(Vector2u(500.,500.));
 	winheight= W.getSize().y;
 	winwidth= W.getSize().x;
-    //texture.loadFromFile("meteor-small.png");
     texture.loadFromFile("meteor3.png");
     Vector2u v= texture.getSize();
     float xs= 100./v.x; //make sprite 100 pixels wide and high
@@ -80,18 +100,67 @@ Ball::Ball(const RenderWindow& W, int rad, int x, int y, int r, int g, int b)
     // must setOrigin to center *before* scaling 
     sprite.setScale(xs,ys);
 	sprite.setPosition(x,y);
-	//collided = false;
     
     
 }
 
 
-void Ball::move(float x, float y)
+void Roid::move(float x, float y)
 {
 	sprite.move(x,y);
 }
 
-void Ball::update(){
+void Roid::update(){
+	
+	pos = sprite.getPosition();
+	float rad = 50.;
+		
+	if ( pos.x - rad > winwidth) //beyond right side
+    {   
+        pos.x = 0;
+    }   
+    if ( pos.y - rad > winheight) //beyond bottom
+    {   
+        pos.y = 0;
+    }   
+    
+    if( pos.x + rad < 0) //beyond left side
+    {   
+        pos.x = winwidth;
+    }   
+    if( pos.y + rad < 0) //beyond top
+    {   
+        pos.y = winheight;
+    }   
+	sprite.setPosition(pos.x, pos.y);
+	sprite.rotate(4);
+}
+
+Ship::Ship(const RenderWindow& W, int rad, int x, int y, int r, int g, int b)
+{
+	winheight= W.getSize().y;
+	winwidth= W.getSize().x;
+    texture.loadFromFile("ship.png");
+    Vector2u v= texture.getSize();
+    float xs= 100./v.x; //make sprite 100 pixels wide and high
+    float ys= 100./v.y;
+    std::cout<<xs<<std::endl;
+    sprite.setTexture(texture);
+    sprite.setOrigin(v.x/2,v.y/2); 
+    // must setOrigin to center *before* scaling 
+    sprite.setScale(xs,ys);
+	sprite.setPosition(x,y);
+    
+    
+}
+
+
+void Ship::move(float x, float y)
+{
+	sprite.move(x,y);
+}
+
+void Ship::update(){
 	
 	if(Keyboard::isKeyPressed(Keyboard::Left))
 	{
@@ -131,5 +200,4 @@ void Ball::update(){
         pos.y = winheight;
     }   
 	sprite.setPosition(pos.x, pos.y);
-	sprite.rotate(4);
 }
